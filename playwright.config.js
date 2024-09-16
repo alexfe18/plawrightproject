@@ -1,37 +1,33 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 export default defineConfig({
   testDir: "./tests",
-  timeout: 30000,
-  retries: 2,
+  fullyParallel: false,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? undefined : 1,
+  reporter: "html",
+  globalSetup: "global-setup.ts",
+  globalTeardown: "global-teardown.ts",
+  testMatch: "**/*.spec.ts",
   use: {
-    baseURL: "https://playwright.dev/",
-    browserName: "chromium",
-    headless: true,
-    viewport: { width: 1280, height: 720 },
-    actionTimeout: 5000,
-    ignoreHTTPSErrors: true,
-    screenshot: "on",
-    video: "retain-on-failure",
+    headless: false,
+    baseURL: process.env.BASE_URL,
+    httpCredentials: {
+      username: process.env.USER_NAME,
+      password: process.env.USER_PASS,
+    },
+    trace: "on",
+    testIdAttribute: "qa-dont-touch",
   },
-  reporter: [["html", { outputFolder: "playwright-report", open: "never" }]],
   projects: [
     {
-      name: "Desktop Chrome",
-      use: {
-        browserName: "chromium",
-        viewport: { width: 1280, height: 720 },
-      },
-    },
-
-    {
-      name: "Mobile Safari",
-      use: {
-        browserName: "webkit",
-        viewport: { width: 375, height: 667 },
-        userAgent:
-          "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1",
-      },
+      name: "qauto",
+      testMatch: "**/*.spec.ts",
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 });
